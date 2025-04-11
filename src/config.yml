@@ -1,0 +1,37 @@
+# Configurações do sistema de plots
+
+plots:
+  # Tamanho padrão para novos plots (em blocos)
+  default-size: 30
+
+  # Número máximo de inquilinos por plot
+  max-tenants: 3
+
+  # Material usado para as cercas (deve ser um tipo de cerca válido)
+  border-material: OAK_FENCE
+
+  # Tamanhos disponíveis para seleção na GUI
+  available-sizes:
+    - 10
+    - 20
+    - 30
+    - 50
+    - 75
+    - 100
+
+  # Configurações de preços
+  prices:
+    # Preço base para o tamanho padrão
+    base-price: 500.0
+
+    # Multiplicador de preço para tamanhos diferentes do padrão
+    # Fórmula: preço = base-price * (1 + size-multiplier * (tamanho / default-size - 1))
+    size-multiplier: 0.5
+
+    # Percentual de reembolso ao vender (%)
+    refund-percent: 60.0
+
+# Não altere a seção abaixo manualmente
+# Ela é gerenciada automaticamente pelo plugin
+plots-data: {}
+player-names: {}

@@ -1,0 +1,51 @@
+name: PlotSystem
+version: 1.0
+main: br.com.boazhector.Main
+api-version: 1.21.4
+depend: [Economy]
+author: Hector_Boaz
+description: Sistema de plots com cercas e GUI
+
+commands:
+  comprarplot:
+    description: Comprar um terreno
+    usage: /comprarplot
+    aliases: [buyplot]
+  meuplot:
+    description: Teleportar para seu terreno
+    usage: /meuplot
+    aliases: [myplot]
+  venderplot:
+    description: Vender seu terreno
+    usage: /venderplot
+    aliases: [sellplot]
+  plotinfo:
+    description: Ver informações sobre o terreno em que você está
+    usage: /plotinfo
+    aliases: [infoplot]
+  adicionarinquilino:
+    description: Adicionar um inquilino ao seu terreno
+    usage: /adicionarinquilino <jogador>
+    aliases: [addtenant]
+  removerinquilino:
+    description: Remover um inquilino do seu terreno
+    usage: /removerinquilino <jogador>
+    aliases: [removetenant]
+  listarinquilinos:
+    description: Listar os inquilinos do seu terreno
+    usage: /listarinquilinos
+    aliases: [listtenants]
+  delplot:
+    description: Remover o terreno de um jogador (Admin)
+    usage: /delplot <jogador>
+    permission: plotsystem.admin
+  plotadmin:
+    description: Comandos administrativos do sistema de plots
+    usage: /plotadmin
+    permission: plotsystem.admin
+    aliases: [padmin]
+
+permissions:
+  plotsystem.admin:
+    description: Permite usar comandos administrativos
+    default: op
