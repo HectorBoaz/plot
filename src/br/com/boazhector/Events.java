@@ -1,5 +1,7 @@
 package br.com.boazhector;
 
+import net.byebye.balance.BalanceAPI;
+import net.byebye.balance.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -9,24 +11,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockBurnEvent;
-import org.bukkit.event.block.BlockExplodeEvent;
-import org.bukkit.event.block.BlockPistonExtendEvent;
-import org.bukkit.event.block.BlockPistonRetractEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.*;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.UUID;
-import net.byebye.balance.Economy;
-import net.byebye.balance.BalanceAPI;
 
 public class Events implements Listener {
 
@@ -103,19 +97,22 @@ public class Events implements Listener {
 
         Player player = event.getPlayer();
         Location location = event.getTo();
+        Block block = event.getTo().getBlock();
 
         // Verificar se o jogador entrou em um terreno
         Plot plot = plugin.getPlotManager().getPlotAt(location);
         if (plot != null) {
             // Verificar se não é o proprietário do terreno
-            if (!plot.getOwnerID().equals(player.getUniqueId())) {
-                // Verificar cooldown para não spammar mensagens
-                long now = System.currentTimeMillis();
-                Long lastNotification = lastNotificationMap.get(player.getUniqueId());
+            if (!hasPermissionInPlot(player, block.getLocation())) {
+                if (!plot.getOwnerID().equals(player.getUniqueId())) {
+                    // Verificar cooldown para não spammar mensagens
+                    long now = System.currentTimeMillis();
+                    Long lastNotification = lastNotificationMap.get(player.getUniqueId());
 
-                if (lastNotification == null || now - lastNotification > NOTIFICATION_COOLDOWN) {
-                    player.sendMessage(ChatColor.YELLOW + "Terreno de: " + ChatColor.GREEN + plot.getOwnerName());
-                    lastNotificationMap.put(player.getUniqueId(), now);
+                    if (lastNotification == null || now - lastNotification > NOTIFICATION_COOLDOWN) {
+                        player.sendMessage(ChatColor.YELLOW + "Terreno de: " + ChatColor.GREEN + plot.getOwnerName());
+                        lastNotificationMap.put(player.getUniqueId(), now);
+                    }
                 }
             }
         }
@@ -333,7 +330,7 @@ public class Events implements Listener {
         // Salvar o plot
         plot.save();
         plot.createBorder();
-        player.sendMessage(ChatColor.GREEN + "Terreno comprado com sucesso! Preço: " + ChatColor.YELLOW + "R$" + String.format("%.2f",price));
+        player.sendMessage(ChatColor.GREEN + "Terreno comprado com sucesso! Preço: " + ChatColor.YELLOW + "R$" + String.format("%.2f", price));
         player.sendMessage(ChatColor.GRAY + "Use /meuplot para teleportar até ele.");
     }
 
@@ -353,7 +350,7 @@ public class Events implements Listener {
         // Reembolsar o jogador
         eco.addSaldo(player, refund);
 
-        player.sendMessage(ChatColor.GREEN + "Você vendeu seu terreno por " + ChatColor.YELLOW + "R$" + String.format("%.2f",refund) + ".");
+        player.sendMessage(ChatColor.GREEN + "Você vendeu seu terreno por " + ChatColor.YELLOW + "R$" + String.format("%.2f", refund) + ".");
     }
 
     private void addTenant(Player owner, Player tenant) {
