@@ -1,14 +1,18 @@
 package br.com.boazhector;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.PermissionAttachment;
 
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
+//§
 public class Commands implements CommandExecutor {
 
     private final Main plugin;
@@ -25,6 +29,22 @@ public class Commands implements CommandExecutor {
         }
 
         Player player = (Player) sender;
+        Location loc = (Location) player.getLocation();
+
+        if (cmd.getName().equalsIgnoreCase("fly")) {
+            Events events = new Events();
+            if (events.hasPermissionFly(player, loc)) {
+                if (!(player.isFlying())) {
+                    player.setAllowFlight(true);
+                    player.setFlying(true);
+                    player.sendMessage("§aFly ativado!");
+                } else {
+                    player.setAllowFlight(false);
+                    player.setFlying(false);
+                    player.sendMessage("§cFly desativado!");
+                }
+            }
+        }
 
         if (cmd.getName().equalsIgnoreCase("comprarplot")) {
             // Verificar se já tem um plot
@@ -36,9 +56,7 @@ public class Commands implements CommandExecutor {
             // Abrir GUI de seleção de tamanho
             GuiManager.openPlotSizeSelectionGui(player);
             return true;
-        }
-
-        else if (cmd.getName().equalsIgnoreCase("meuplot")) {
+        } else if (cmd.getName().equalsIgnoreCase("meuplot")) {
             // Verificar se tem um plot
             if (!plugin.getPlotManager().hasPlot(player.getUniqueId())) {
                 player.sendMessage(ChatColor.RED + "Você ainda não possui um terreno!");
@@ -49,9 +67,7 @@ public class Commands implements CommandExecutor {
             player.teleport(plot.getCenter());
             player.sendMessage(ChatColor.GREEN + "Teleportado para seu terreno!");
             return true;
-        }
-
-        else if (cmd.getName().equalsIgnoreCase("venderplot")) {
+        } else if (cmd.getName().equalsIgnoreCase("venderplot")) {
             // Verificar se tem um plot
             if (!plugin.getPlotManager().hasPlot(player.getUniqueId())) {
                 player.sendMessage(ChatColor.RED + "Você não possui um terreno!");
@@ -61,9 +77,7 @@ public class Commands implements CommandExecutor {
             // Abrir GUI de confirmação
             GuiManager.openConfirmSellPlotGui(player);
             return true;
-        }
-
-        else if (cmd.getName().equalsIgnoreCase("plotinfo")) {
+        } else if (cmd.getName().equalsIgnoreCase("plotinfo")) {
             // Obter plot na localização atual
             Plot plot = plugin.getPlotManager().getPlotAt(player.getLocation());
 
@@ -94,9 +108,7 @@ public class Commands implements CommandExecutor {
             }
 
             return true;
-        }
-
-        else if (cmd.getName().equalsIgnoreCase("adicionarinquilino")) {
+        } else if (cmd.getName().equalsIgnoreCase("adicionarinquilino")) {
             // Verificar se o comando tem argumentos
             if (args.length < 1) {
                 player.sendMessage(ChatColor.RED + "Uso: /adicionarinquilino <jogador>");
@@ -142,9 +154,7 @@ public class Commands implements CommandExecutor {
             GuiManager.openAddTenantGui(player, target);
 
             return true;
-        }
-
-        else if (cmd.getName().equalsIgnoreCase("removerinquilino")) {
+        } else if (cmd.getName().equalsIgnoreCase("removerinquilino")) {
             // Verificar se o comando tem argumentos
             if (args.length < 1) {
                 player.sendMessage(ChatColor.RED + "Uso: /removerinquilino <jogador>");
@@ -177,9 +187,7 @@ public class Commands implements CommandExecutor {
             GuiManager.openRemoveTenantGui(player, target);
 
             return true;
-        }
-
-        else if (cmd.getName().equalsIgnoreCase("listarinquilinos")) {
+        } else if (cmd.getName().equalsIgnoreCase("listarinquilinos")) {
             // Verificar se tem um plot
             if (!plugin.getPlotManager().hasPlot(player.getUniqueId())) {
                 player.sendMessage(ChatColor.RED + "Você não possui um terreno!");

@@ -26,20 +26,16 @@ public class Events implements Listener {
 
     Economy eco = BalanceAPI.getEconomy();
 
-    private final Main plugin;
     private final HashMap<UUID, Long> lastNotificationMap = new HashMap<>();
     private final long NOTIFICATION_COOLDOWN = 3000; // 3 segundos em milissegundos
 
-    public Events(Main plugin) {
-        this.plugin = plugin;
-    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         // Salvar nome do jogador para referência futura
-        plugin.getConfig().set("player-names." + player.getUniqueId().toString(), player.getName());
-        plugin.saveConfig();
+        Main.m.getConfig().set("player-names." + player.getUniqueId().toString(), player.getName());
+        Main.m.saveConfig();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -100,7 +96,7 @@ public class Events implements Listener {
         Block block = event.getTo().getBlock();
 
         // Verificar se o jogador entrou em um terreno
-        Plot plot = plugin.getPlotManager().getPlotAt(location);
+        Plot plot = Main.m.getPlotManager().getPlotAt(location);
         if (plot != null) {
             // Verificar se não é o proprietário do terreno
             if (!hasPermissionInPlot(player, block.getLocation())) {
@@ -114,6 +110,12 @@ public class Events implements Listener {
                         lastNotificationMap.put(player.getUniqueId(), now);
                     }
                 }
+            }
+        } else {
+            if (player.getAllowFlight()){
+                player.setAllowFlight(false);
+                player.setFlying(false);
+                player.sendMessage("§cVocê saiu da sua plot, o Fly Foi desativado automaticamente!");
             }
         }
     }
@@ -139,7 +141,7 @@ public class Events implements Listener {
                         String sizeStr = displayName.split("x")[0].trim();
                         try {
                             int size = Integer.parseInt(sizeStr);
-                            plugin.setSelectedSize(player, size);
+                            Main.m.setSelectedSize(player, size);
 
                             // Abrir GUI de confirmação
                             player.closeInventory();
@@ -154,7 +156,7 @@ public class Events implements Listener {
             else if (event.getView().getTitle().equals(ChatColor.DARK_GRAY + "Confirmar Compra de Plot")) {
                 if (item.getType() == Material.GREEN_WOOL) {
                     player.closeInventory();
-                    int size = plugin.getSelectedSize(player);
+                    int size = Main.m.getSelectedSize(player);
                     double price = getPlotPrice(size);
 
                     if (eco.getSaldo(player) >= price) {
@@ -164,11 +166,11 @@ public class Events implements Listener {
                                 + ChatColor.YELLOW + "R$" + String.format("%.2f", price));
                     }
 
-                    plugin.removeSelectedSize(player);
+                    Main.m.removeSelectedSize(player);
                 } else if (item.getType() == Material.RED_WOOL) {
                     player.closeInventory();
                     player.sendMessage(ChatColor.RED + "Compra de terreno cancelada.");
-                    plugin.removeSelectedSize(player);
+                    Main.m.removeSelectedSize(player);
                 }
             }
             // Lidar com cliques na GUI de venda de plot
@@ -186,39 +188,39 @@ public class Events implements Listener {
             event.setCancelled(true);
             if (item.getType() == Material.GREEN_WOOL) {
                 player.closeInventory();
-                UUID targetId = plugin.getTargetPlayer(player);
+                UUID targetId = Main.m.getTargetPlayer(player);
                 if (targetId != null) {
-                    Player target = plugin.getServer().getPlayer(targetId);
+                    Player target = Main.m.getServer().getPlayer(targetId);
                     if (target != null) {
                         addTenant(player, target);
                     } else {
                         player.sendMessage(ChatColor.RED + "Jogador não encontrado!");
                     }
                 }
-                plugin.removeTargetPlayer(player);
+                Main.m.removeTargetPlayer(player);
             } else if (item.getType() == Material.RED_WOOL) {
                 player.closeInventory();
                 player.sendMessage(ChatColor.RED + "Adição de inquilino cancelada.");
-                plugin.removeTargetPlayer(player);
+                Main.m.removeTargetPlayer(player);
             }
         } else if (event.getView().getTitle().equals(ChatColor.DARK_GRAY + "Remover Inquilino")) {
             event.setCancelled(true);
             if (item.getType() == Material.GREEN_WOOL) {
                 player.closeInventory();
-                UUID targetId = plugin.getTargetPlayer(player);
+                UUID targetId = Main.m.getTargetPlayer(player);
                 if (targetId != null) {
-                    Player target = plugin.getServer().getPlayer(targetId);
+                    Player target = Main.m.getServer().getPlayer(targetId);
                     if (target != null) {
                         removeTenant(player, target);
                     } else {
                         player.sendMessage(ChatColor.RED + "Jogador não encontrado!");
                     }
                 }
-                plugin.removeTargetPlayer(player);
+                Main.m.removeTargetPlayer(player);
             } else if (item.getType() == Material.RED_WOOL) {
                 player.closeInventory();
                 player.sendMessage(ChatColor.RED + "Remoção de inquilino cancelada.");
-                plugin.removeTargetPlayer(player);
+                Main.m.removeTargetPlayer(player);
             }
         }
     }
@@ -242,8 +244,8 @@ public class Events implements Listener {
     public void onPistonExtend(BlockPistonExtendEvent event) {
         // Verificar se o pistão atravessa diferentes plots
         for (Block block : event.getBlocks()) {
-            Plot plot1 = plugin.getPlotManager().getPlotAt(block.getLocation());
-            Plot plot2 = plugin.getPlotManager().getPlotAt(block.getRelative(event.getDirection()).getLocation());
+            Plot plot1 = Main.m.getPlotManager().getPlotAt(block.getLocation());
+            Plot plot2 = Main.m.getPlotManager().getPlotAt(block.getRelative(event.getDirection()).getLocation());
 
             // Se um dos blocos estiver em um plot e o outro em outro (ou fora), cancela
             if (plot1 != plot2) {
@@ -259,8 +261,8 @@ public class Events implements Listener {
 
         // Verificar se o pistão atravessa diferentes plots
         for (Block block : event.getBlocks()) {
-            Plot plot1 = plugin.getPlotManager().getPlotAt(block.getLocation());
-            Plot plot2 = plugin.getPlotManager().getPlotAt(block.getRelative(event.getDirection().getOppositeFace()).getLocation());
+            Plot plot1 = Main.m.getPlotManager().getPlotAt(block.getLocation());
+            Plot plot2 = Main.m.getPlotManager().getPlotAt(block.getRelative(event.getDirection().getOppositeFace()).getLocation());
 
             // Se um dos blocos estiver em um plot e o outro em outro (ou fora), cancela
             if (plot1 != plot2) {
@@ -270,13 +272,13 @@ public class Events implements Listener {
         }
     }
 
-    private boolean hasPermissionInPlot(Player player, Location location) {
+    public boolean hasPermissionInPlot(Player player, Location location) {
         // Verificar se o jogador tem permissão de admin
         if (player.hasPermission("plotsystem.admin")) {
             return true;
         }
 
-        Plot plot = plugin.getPlotManager().getPlotAt(location);
+        Plot plot = Main.m.getPlotManager().getPlotAt(location);
         if (plot == null) {
             // Se não estiver em nenhum plot, tem permissão
             return true;
@@ -286,13 +288,29 @@ public class Events implements Listener {
         return plot.hasAccess(player.getUniqueId());
     }
 
+    public boolean hasPermissionFly(Player player, Location location) {
+        // Verificar se o jogador tem permissão de admin
+        if (player.hasPermission("plotsystem.admin")) {
+            return true;
+        }
+
+        Plot plot = Main.m.getPlotManager().getPlotAt(location);
+        if (plot == null) {
+            // Se não estiver em nenhum plot, tem permissão
+            return false;
+        }
+
+        // Verificar se é o dono ou inquilino
+        return plot.hasAccess(player.getUniqueId());
+    }
+
     private double getPlotPrice(int size) {
         // Preço base para o tamanho padrão (configurável)
-        double basePrice = plugin.getConfig().getDouble("plots.prices.base-price", 500.0);
-        int baseSize = plugin.getConfig().getInt("plots.default-size", 30);
+        double basePrice = Main.m.getConfig().getDouble("plots.prices.base-price", 500.0);
+        int baseSize = Main.m.getConfig().getInt("plots.default-size", 30);
 
         // Fator de multiplicação para tamanhos maiores
-        double priceFactor = plugin.getConfig().getDouble("plots.prices.size-multiplier", 0.5);
+        double priceFactor = Main.m.getConfig().getDouble("plots.prices.size-multiplier", 0.5);
 
         // Calcular preço com base no tamanho
         return basePrice * (1 + priceFactor * ((double) size / baseSize - 1));
@@ -300,7 +318,7 @@ public class Events implements Listener {
 
     private double getPlotRefund(int size) {
         // Percentual de reembolso (configurável)
-        double refundPercent = plugin.getConfig().getDouble("plots.prices.refund-percent", 60.0);
+        double refundPercent = Main.m.getConfig().getDouble("plots.prices.refund-percent", 60.0);
 
         // Calcular reembolso com base no preço
         return getPlotPrice(size) * (refundPercent / 100.0);
@@ -308,14 +326,14 @@ public class Events implements Listener {
 
     private void createPlotForPlayer(Player player, int size, double price) {
         // Verificar se já tem um plot
-        if (plugin.getPlotManager().hasPlot(player.getUniqueId())) {
+        if (Main.m.getPlotManager().hasPlot(player.getUniqueId())) {
             player.sendMessage(ChatColor.RED + "Você já possui um terreno!");
             return;
         }
 
         // Verificar se a localização é válida (não sobrepõe outros plots)
         Location location = player.getLocation();
-        if (!plugin.getPlotManager().canCreatePlot(location, size)) {
+        if (!Main.m.getPlotManager().canCreatePlot(location, size)) {
             player.sendMessage(ChatColor.RED + "Este local está muito próximo ou sobrepõe outro terreno!");
             return;
         }
@@ -324,8 +342,8 @@ public class Events implements Listener {
         eco.removeSaldo(player, price);
 
         // Criar o plot
-        Plot plot = new Plot(plugin, player.getUniqueId(), location, size);
-        plugin.getPlotManager().addPlot(player.getUniqueId(), plot);
+        Plot plot = new Plot(Main.m, player.getUniqueId(), location, size);
+        Main.m.getPlotManager().addPlot(player.getUniqueId(), plot);
 
         // Salvar o plot
         plot.save();
@@ -336,16 +354,16 @@ public class Events implements Listener {
 
     private void sellPlot(Player player) {
         // Verificar se tem um plot
-        if (!plugin.getPlotManager().hasPlot(player.getUniqueId())) {
+        if (!Main.m.getPlotManager().hasPlot(player.getUniqueId())) {
             player.sendMessage(ChatColor.RED + "Você não possui um terreno!");
             return;
         }
 
-        Plot plot = plugin.getPlotManager().getPlot(player.getUniqueId());
+        Plot plot = Main.m.getPlotManager().getPlot(player.getUniqueId());
         double refund = getPlotRefund(plot.getSize());
 
         // Remover o plot
-        plugin.getPlotManager().removePlot(player.getUniqueId());
+        Main.m.getPlotManager().removePlot(player.getUniqueId());
 
         // Reembolsar o jogador
         eco.addSaldo(player, refund);
@@ -355,21 +373,21 @@ public class Events implements Listener {
 
     private void addTenant(Player owner, Player tenant) {
         // Verificar se o dono tem um plot
-        if (!plugin.getPlotManager().hasPlot(owner.getUniqueId())) {
+        if (!Main.m.getPlotManager().hasPlot(owner.getUniqueId())) {
             owner.sendMessage(ChatColor.RED + "Você não possui um terreno!");
             return;
         }
 
         // Verificar se o inquilino já tem um plot
-        if (plugin.getPlotManager().hasPlot(tenant.getUniqueId())) {
+        if (Main.m.getPlotManager().hasPlot(tenant.getUniqueId())) {
             owner.sendMessage(ChatColor.RED + "Esse jogador já possui um terreno!");
             return;
         }
 
-        Plot plot = plugin.getPlotManager().getPlot(owner.getUniqueId());
+        Plot plot = Main.m.getPlotManager().getPlot(owner.getUniqueId());
 
         // Verificar limite de inquilinos
-        int maxTenants = plugin.getConfig().getInt("plots.max-tenants", 3);
+        int maxTenants = Main.m.getConfig().getInt("plots.max-tenants", 3);
         if (plot.getMembers().size() >= maxTenants) {
             owner.sendMessage(ChatColor.RED + "Você atingiu o limite máximo de inquilinos (" + maxTenants + ").");
             return;
@@ -385,12 +403,12 @@ public class Events implements Listener {
 
     private void removeTenant(Player owner, Player tenant) {
         // Verificar se o dono tem um plot
-        if (!plugin.getPlotManager().hasPlot(owner.getUniqueId())) {
+        if (!Main.m.getPlotManager().hasPlot(owner.getUniqueId())) {
             owner.sendMessage(ChatColor.RED + "Você não possui um terreno!");
             return;
         }
 
-        Plot plot = plugin.getPlotManager().getPlot(owner.getUniqueId());
+        Plot plot = Main.m.getPlotManager().getPlot(owner.getUniqueId());
 
         // Verificar se o jogador é inquilino
         if (!plot.isMember(tenant.getUniqueId())) {

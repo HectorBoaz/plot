@@ -11,6 +11,7 @@ import java.util.UUID;
 public class Main extends JavaPlugin {
 
     private static Main instance;
+    public static Main m;
     private PlotManager plotManager;
     private final HashMap<UUID, UUID> targetPlayerMap = new HashMap<>();
     private final HashMap<UUID, Integer> selectedSizeMap = new HashMap<>();
@@ -24,6 +25,8 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        m = this;
+
         instance = this;
 
         // Salvar config padrão se não existir
@@ -41,12 +44,14 @@ public class Main extends JavaPlugin {
         getCommand("removerinquilino").setExecutor(new Commands(this));
         getCommand("listarinquilinos").setExecutor(new Commands(this));
 
+        getCommand("fly").setExecutor(new Commands(this));
+
         // Comandos de administrador
         getCommand("delplot").setExecutor(new CommandsAdmin(this));
         getCommand("plotadmin").setExecutor(new CommandsAdmin(this));
 
         // Registrar eventos
-        getServer().getPluginManager().registerEvents(new Events(this), this);
+        getServer().getPluginManager().registerEvents(new Events(), this);
 
         // Carregar dados
         plotManager.loadPlots();

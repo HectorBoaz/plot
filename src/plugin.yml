@@ -43,7 +43,11 @@ commands:
     description: Comandos administrativos do sistema de plots
     usage: /plotadmin
     permission: plotsystem.admin
-    aliases: [padmin]
+    aliases: [ padmin ]
+  fly:
+    description: Comandos voar rs
+    permission: vip.voar
+    aliases: [ voar ]
 
 permissions:
   plotsystem.admin:
