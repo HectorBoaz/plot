@@ -31,7 +31,17 @@ plots:
     # Percentual de reembolso ao vender (%)
     refund-percent: 60.0
 
-# Não altere a seção abaixo manualmente
-# Ela é gerenciada automaticamente pelo plugin
+# Informações do sistema VIP e limites de plots
+# Estes valores são apenas informativos, a lógica é baseada em permissões
+vip:
+  info:
+    normal: 1
+    cosmo: 2
+    legacy: 3
+    astral: 5
+    admin: "Ilimitado"
+
+# Não altere as seções abaixo manualmente
+# Elas são gerenciadas automaticamente pelo plugin
 plots-data: {}
 player-names: {}

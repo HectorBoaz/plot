@@ -25,31 +25,51 @@ commands:
     aliases: [infoplot]
   adicionarinquilino:
     description: Adicionar um inquilino ao seu terreno
-    usage: /adicionarinquilino <jogador>
+    usage: /adicionarinquilino <jogador> [numero_do_plot]
     aliases: [addtenant]
   removerinquilino:
     description: Remover um inquilino do seu terreno
-    usage: /removerinquilino <jogador>
+    usage: /removerinquilino <jogador> [numero_do_plot]
     aliases: [removetenant]
   listarinquilinos:
     description: Listar os inquilinos do seu terreno
-    usage: /listarinquilinos
+    usage: /listarinquilinos [numero_do_plot]
     aliases: [listtenants]
+  meusplots:
+    description: Listar todos os seus plots
+    usage: /meusplots
+    aliases: [myplots, plots]
+  irplot:
+    description: Teleportar para um plot específico
+    usage: /irplot <numero_do_plot>
+    aliases: [gotoplot, tpplot]
   delplot:
     description: Remover o terreno de um jogador (Admin)
-    usage: /delplot <jogador>
+    usage: /delplot <jogador> [numero_do_plot]
     permission: plotsystem.admin
   plotadmin:
     description: Comandos administrativos do sistema de plots
     usage: /plotadmin
     permission: plotsystem.admin
-    aliases: [ padmin ]
+    aliases: [padmin]
   fly:
-    description: Comandos voar rs
-    permission: vip.voar
-    aliases: [ voar ]
+    description: Ativar ou desativar o modo de voo em plots
+    usage: /fly
+    aliases: [voar]
 
 permissions:
   plotsystem.admin:
     description: Permite usar comandos administrativos
     default: op
+  vipcosmo.perm:
+    description: Permite ter até 2 plots
+    default: false
+  viplegacy.perm:
+    description: Permite ter até 3 plots
+    default: false
+  vipastral.perm:
+    description: Permite ter até 5 plots
+    default: false
+  vip.voar:
+    description: Permite voar nos plots
+    default: false

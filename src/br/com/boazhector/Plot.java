@@ -7,7 +7,6 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import org.bukkit.event.server.BroadcastMessageEvent;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -19,14 +18,16 @@ public class Plot {
     private final UUID ownerID;
     private Location center;
     private int size;
+    private int plotIndex = 0; // Índice do plot (para jogadores com múltiplos plots)
     private final HashSet<UUID> members = new HashSet<>();
-    private final List<Block> borderBlocks = new ArrayList<>();
+    private List<Location> borderLocations = new ArrayList<>(); // Armazenar localizações em vez de blocos
 
     public Plot(Main plugin, UUID ownerID, Location center, int size) {
         this.plugin = plugin;
         this.ownerID = ownerID;
         this.center = center;
         this.size = size;
+        createBorder();
     }
 
     public Plot(Main plugin, UUID ownerID) {
@@ -61,18 +62,26 @@ public class Plot {
         this.size = newSize;
     }
 
+    public int getPlotIndex() {
+        return plotIndex;
+    }
+
+    public void setPlotIndex(int index) {
+        this.plotIndex = index;
+    }
+
     public HashSet<UUID> getMembers() {
         return members;
     }
 
     public void addMember(UUID playerID) {
         members.add(playerID);
-        save();
+        save(plotIndex);
     }
 
     public void removeMember(UUID playerID) {
         members.remove(playerID);
-        save();
+        save(plotIndex);
     }
 
     public boolean isMember(UUID playerID) {
@@ -149,7 +158,6 @@ public class Plot {
         int x2 = center.getBlockX() + halfSize;
         int z1 = center.getBlockZ() - halfSize;
         int z2 = center.getBlockZ() + halfSize;
-        int y = center.getBlockY();
 
         Material fenceMaterial = Material.OAK_FENCE;
 
@@ -169,10 +177,70 @@ public class Plot {
                     // Encontrar o bloco mais alto no local
                     int highestY = findSuitableY(world, x, z);
 
-                    Block block = world.getBlockAt(x, highestY, z);
+                    Location borderLoc = new Location(world, x, highestY, z);
+                    borderLocations.add(borderLoc); // Armazenar localização
+
+                    Block block = world.getBlockAt(borderLoc);
                     if (block.getType() == Material.AIR) {
                         block.setType(fenceMaterial);
-                        borderBlocks.add(block);
+                    }
+                }
+            }
+        }
+
+        // Salvar as localizações das bordas no config
+        saveBorderLocations();
+    }
+
+    // Salvar as localizações das bordas no config para uso posterior
+    private void saveBorderLocations() {
+        List<String> locations = new ArrayList<>();
+
+        for (Location loc : borderLocations) {
+            String locString = loc.getWorld().getName() + ";" +
+                    loc.getBlockX() + ";" +
+                    loc.getBlockY() + ";" +
+                    loc.getBlockZ();
+            locations.add(locString);
+        }
+
+        String path;
+        if (plotIndex >= 0) {
+            path = "plots.data." + ownerID.toString() + "." + plotIndex + ".borders";
+        } else {
+            path = "plots.data." + ownerID.toString() + ".borders";
+        }
+
+        plugin.getConfig().set(path, locations);
+        plugin.saveConfig();
+    }
+
+    // Carregar as localizações das bordas do config
+    private void loadBorderLocations() {
+        String path;
+        if (plotIndex >= 0) {
+            path = "plots.data." + ownerID.toString() + "." + plotIndex + ".borders";
+        } else {
+            path = "plots.data." + ownerID.toString() + ".borders";
+        }
+
+        List<String> locations = plugin.getConfig().getStringList(path);
+        borderLocations.clear();
+
+        if (locations != null && !locations.isEmpty()) {
+            for (String locString : locations) {
+                String[] parts = locString.split(";");
+                if (parts.length == 4) {
+                    World world = Bukkit.getWorld(parts[0]);
+                    if (world != null) {
+                        try {
+                            int x = Integer.parseInt(parts[1]);
+                            int y = Integer.parseInt(parts[2]);
+                            int z = Integer.parseInt(parts[3]);
+                            borderLocations.add(new Location(world, x, y, z));
+                        } catch (NumberFormatException e) {
+                            plugin.getLogger().warning("Formato inválido para localização de borda: " + locString);
+                        }
                     }
                 }
             }
@@ -192,16 +260,71 @@ public class Plot {
     }
 
     public void removeBorder() {
-        for (Block block : borderBlocks) {
-            if (block.getType().equals(Material.OAK_FENCE)) {
+        // Primeiro, tentar carregar as localizações salvas se ainda não carregamos
+        if (borderLocations.isEmpty()) {
+            loadBorderLocations();
+        }
+
+        // Se ainda estiver vazio, não há nada para remover
+        if (borderLocations.isEmpty()) {
+            return;
+        }
+
+        // Remover todas as cercas nas localizações salvas
+        for (Location loc : borderLocations) {
+            Block block = loc.getBlock();
+            if (block.getType().name().contains("FENCE")) {
                 block.setType(Material.AIR);
             }
         }
-        borderBlocks.clear();
+
+        // Limpar a lista
+        borderLocations.clear();
+
+        // Também remover do config
+        String path;
+        if (plotIndex >= 0) {
+            path = "plots.data." + ownerID.toString() + "." + plotIndex + ".borders";
+        } else {
+            path = "plots.data." + ownerID.toString() + ".borders";
+        }
+
+        plugin.getConfig().set(path, null);
+        plugin.saveConfig();
+    }
+
+    // Verificar se as cercas da borda existem e recriá-las somente se estiverem faltando
+    public void checkAndUpdateBorder() {
+        if (borderLocations.isEmpty()) {
+            loadBorderLocations();
+        }
+
+        // Se não houver localizações salvas, criamos as cercas
+        if (borderLocations.isEmpty()) {
+            createBorder();
+            return;
+        }
+
+        // Não fazer nada - manter as cercas como estão
+        // Se uma cerca foi quebrada ou substituída por outro bloco, não tentamos recriá-la
+        // Se um jogador colocou um bloco sobre ou no lugar de uma cerca, respeitamos isso
     }
 
     public void save() {
-        ConfigurationSection plotSection = plugin.getConfig().createSection("plots.data." + ownerID.toString());
+        save(0); // Compatibilidade com formato antigo
+    }
+
+    public void save(int index) {
+        String path;
+        if (index >= 0) {
+            // Formato novo com índice para múltiplos plots
+            path = "plots.data." + ownerID.toString() + "." + index;
+        } else {
+            // Formato antigo (único plot)
+            path = "plots.data." + ownerID.toString();
+        }
+
+        ConfigurationSection plotSection = plugin.getConfig().createSection(path);
         plotSection.set("world", center.getWorld().getName());
         plotSection.set("x", center.getX());
         plotSection.set("y", center.getY());
@@ -214,11 +337,29 @@ public class Plot {
         }
         plotSection.set("members", membersList);
 
+        // Salvar as localizações das bordas
+        saveBorderLocations();
+
         plugin.saveConfig();
     }
 
     public void load() {
-        ConfigurationSection plotSection = plugin.getConfig().getConfigurationSection("plots.data." + ownerID.toString());
+        load(-1); // Carrega no formato antigo
+    }
+
+    public void load(int index) {
+        ConfigurationSection plotSection;
+
+        if (index >= 0) {
+            // Formato novo (múltiplos plots)
+            plotSection = plugin.getConfig().getConfigurationSection("plots.data." + ownerID.toString() + "." + index);
+            this.plotIndex = index;
+        } else {
+            // Formato antigo (único plot)
+            plotSection = plugin.getConfig().getConfigurationSection("plots.data." + ownerID.toString());
+            this.plotIndex = 0;
+        }
+
         if (plotSection == null) {
             return;
         }
@@ -246,5 +387,11 @@ public class Plot {
                 plugin.getLogger().warning("ID de membro inválido: " + memberStr);
             }
         }
+
+        // Carregar as localizações das bordas
+        loadBorderLocations();
+
+        // Verificar as cercas e atualizar apenas se necessário
+        checkAndUpdateBorder();
     }
 }
