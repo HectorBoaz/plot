@@ -47,6 +47,7 @@ public class Main extends JavaPlugin {
         getCommand("listarinquilinos").setExecutor(new Commands(this));
         getCommand("meusplots").setExecutor(new Commands(this));
         getCommand("irplot").setExecutor(new Commands(this));
+        getServer().getPluginManager().registerEvents(new Events(), this); // <- ESSA LINHA
 
         // Registrar comando fly como um executor separado
         getCommand("fly").setExecutor(new FlyCommand(this));

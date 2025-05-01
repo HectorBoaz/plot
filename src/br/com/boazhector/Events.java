@@ -298,7 +298,7 @@ public class Events implements Listener {
                                 // Confirmar venda do plot selecionado
                                 player.closeInventory();
                                 Main.m.setSelectedPlotIndex(player, plotIndex);
-                                GuiManager.openConfirmSellPlotGui(player, plotIndex);
+                                GuiManager.openConfirmSellPlotGui(player);
                             } else if (title.equals(ChatColor.DARK_GRAY + "Selecione um Plot para Adicionar Inquilino")) {
                                 // Adicionar inquilino ao plot selecionado
                                 player.closeInventory();
@@ -345,32 +345,53 @@ public class Events implements Listener {
             }
 
             // GUI de adicionar inquilino
-            else if (title.equals(ChatColor.DARK_GRAY + "Adicionar Inquilino")) {
-                if (item.getType() == Material.GREEN_WOOL) {
-                    player.closeInventory();
-                    UUID targetId = Main.m.getTargetPlayer(player);
-                    int plotIndex = Main.m.getSelectedPlotIndex(player);
+            else if (title != null && title.equals(ChatColor.DARK_GRAY + "Adicionar Inquilino")) {
+                if (event.getRawSlot() >= 0 && event.getRawSlot() < event.getInventory().getSize()) {
+                    event.setCancelled(true); // Cancela arrastar itens
 
-                    if (targetId != null) {
-                        Player target = Main.m.getServer().getPlayer(targetId);
-                        if (target != null) {
-                            addTenant(player, target, plotIndex);
-                        } else {
-                            player.sendMessage(ChatColor.RED + "Jogador não encontrado!");
-                        }
+                    ItemStack clickedItem = event.getCurrentItem();
+                    if (clickedItem == null || clickedItem.getType() == Material.AIR) {
+                        player.sendMessage("§7[DEBUG] Nenhum item clicado.");
+                        return;
                     }
-                    Main.m.removeTargetPlayer(player);
-                    Main.m.removeSelectedPlotIndex(player);
-                } else if (item.getType() == Material.RED_WOOL) {
-                    player.closeInventory();
-                    player.sendMessage(ChatColor.RED + "Adição de inquilino cancelada.");
-                    Main.m.removeTargetPlayer(player);
-                    Main.m.removeSelectedPlotIndex(player);
+
+                    player.sendMessage("§7[DEBUG] Clicou em: " + clickedItem.getType());
+
+                    if (clickedItem.getType() == Material.GREEN_WOOL) {
+                        player.sendMessage("§a[DEBUG] Clique no botão de confirmar detectado.");
+                        player.closeInventory();
+
+                        UUID targetId = Main.m.getTargetPlayer(player);
+                        int plotIndex = Main.m.getSelectedPlotIndex(player);
+
+                        if (targetId != null) {
+                            Player target = Bukkit.getPlayer(targetId);
+                            if (target != null) {
+                                player.sendMessage("§a[DEBUG] Chamando addTenant para " + target.getName());
+                                addTenant(player, target, plotIndex);
+                                player.sendMessage(ChatColor.GREEN + "✅ Inquilino adicionado com sucesso!");
+                            } else {
+                                player.sendMessage(ChatColor.RED + "Jogador não encontrado!");
+                            }
+                        } else {
+                            player.sendMessage(ChatColor.RED + "Erro: nenhum jogador alvo definido.");
+                        }
+
+                        Main.m.removeTargetPlayer(player);
+                        Main.m.removeSelectedPlotIndex(player);
+                    } else if (clickedItem.getType() == Material.RED_WOOL) {
+                        player.sendMessage("§c[DEBUG] Clique no botão de cancelar detectado.");
+                        player.closeInventory();
+                        player.sendMessage(ChatColor.RED + "Adição de inquilino cancelada.");
+                        Main.m.removeTargetPlayer(player);
+                        Main.m.removeSelectedPlotIndex(player);
+                    }
                 }
             }
 
             // GUI de remover inquilino
             else if (title.equals(ChatColor.DARK_GRAY + "Remover Inquilino")) {
+                event.setCancelled(true);
                 if (item.getType() == Material.GREEN_WOOL) {
                     player.closeInventory();
                     UUID targetId = Main.m.getTargetPlayer(player);

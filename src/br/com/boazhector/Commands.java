@@ -187,7 +187,7 @@ public class Commands implements CommandExecutor {
                     }
 
                     plugin.setSelectedPlotIndex(player, plotIndex);
-                    GuiManager.openConfirmSellPlotGui(player, plotIndex);
+                    GuiManager.openConfirmSellPlotGui(player);
                 } catch (NumberFormatException e) {
                     player.sendMessage(ChatColor.RED + "Por favor, digite um número válido!");
                 }
@@ -375,7 +375,8 @@ public class Commands implements CommandExecutor {
                         } else {
                             // O jogador é inquilino em múltiplos plots, perguntar qual remover
                             plugin.setTargetPlayer(player, target);
-                            GuiManager.openPlotSelectionForRemoveTenantGui(player, target);
+                            plugin.setTargetPlayer(player, target); // Salva o jogador alvo
+                            GuiManager.openPlotSelectionForRemoveTenantGui(player); // Chama a GUI com apenas o player
                             return true;
                         }
                     }

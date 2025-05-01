@@ -14,7 +14,68 @@ import java.util.List;
 
 public class GuiManager {
 
+    public static final String GUI_ADD_TENANT = ChatColor.DARK_GRAY + "Adicionar Inquilino";
+    public static final String GUI_REMOVE_TENANT = ChatColor.DARK_GRAY + "Remover Inquilino";
+    public static final String GUI_CONFIRM_SELL = ChatColor.DARK_GRAY + "Confirmar Venda de Plot";
+
     private static Main plugin = Main.getInstance();
+
+    public static void openPlotSelectionGui(Player player) {
+        Inventory gui = Bukkit.createInventory(null, 27, ChatColor.DARK_GRAY + "Seus Plots");
+
+        // Exemplo de plot
+        for (int i = 0; i < Main.getInstance().getPlotManager().getPlotCount(player.getUniqueId()); i++) {
+            ItemStack item = new ItemStack(Material.OAK_SIGN);
+            ItemMeta meta = item.getItemMeta();
+            meta.setDisplayName(ChatColor.GREEN + "Plot #" + (i + 1));
+            item.setItemMeta(meta);
+            gui.setItem(i, item);
+        }
+
+        player.openInventory(gui);
+    }
+
+    public static void openPlotSelectionForSellGui(Player player) {
+        Inventory gui = Bukkit.createInventory(null, 27, ChatColor.DARK_GRAY + "Selecione um Plot para Vender");
+
+        for (int i = 0; i < Main.getInstance().getPlotManager().getPlotCount(player.getUniqueId()); i++) {
+            ItemStack item = new ItemStack(Material.CHEST);
+            ItemMeta meta = item.getItemMeta();
+            meta.setDisplayName(ChatColor.GREEN + "Plot #" + (i + 1));
+            item.setItemMeta(meta);
+            gui.setItem(i, item);
+        }
+
+        player.openInventory(gui);
+    }
+
+    public static void openPlotSelectionForAddTenantGui(Player player) {
+        Inventory gui = Bukkit.createInventory(null, 27, ChatColor.DARK_GRAY + "Selecione um Plot para Adicionar Inquilino");
+
+        for (int i = 0; i < Main.getInstance().getPlotManager().getPlotCount(player.getUniqueId()); i++) {
+            ItemStack item = new ItemStack(Material.PLAYER_HEAD);
+            ItemMeta meta = item.getItemMeta();
+            meta.setDisplayName(ChatColor.GREEN + "Plot #" + (i + 1));
+            item.setItemMeta(meta);
+            gui.setItem(i, item);
+        }
+
+        player.openInventory(gui);
+    }
+
+    public static void openPlotSelectionForRemoveTenantGui(Player player) {
+        Inventory gui = Bukkit.createInventory(null, 27, ChatColor.DARK_GRAY + "Selecione um Plot para Remover Inquilino");
+
+        for (int i = 0; i < Main.getInstance().getPlotManager().getPlotCount(player.getUniqueId()); i++) {
+            ItemStack item = new ItemStack(Material.BOOK);
+            ItemMeta meta = item.getItemMeta();
+            meta.setDisplayName(ChatColor.GREEN + "Plot #" + (i + 1));
+            item.setItemMeta(meta);
+            gui.setItem(i, item);
+        }
+
+        player.openInventory(gui);
+    }
 
     public static void openPlotSizeSelectionGui(Player player) {
         Inventory gui = Bukkit.createInventory(null, 27, ChatColor.DARK_GRAY + "Escolha o Tamanho do Plot");
@@ -99,7 +160,8 @@ public class GuiManager {
     public static void openConfirmSellPlotGui(Player player) {
         Inventory gui = Bukkit.createInventory(null, 9, ChatColor.DARK_GRAY + "Confirmar Venda de Plot");
 
-        Plot plot = plugin.getPlotManager().getPlot(player.getUniqueId());
+        int plotIndex = plugin.getSelectedPlotIndex(player);
+        Plot plot = plugin.getPlotManager().getPlot(player.getUniqueId(), plotIndex);
         if (plot == null) {
             player.sendMessage(ChatColor.RED + "Você não possui um terreno!");
             return;
